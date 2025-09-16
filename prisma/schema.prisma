@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model rooms {
+  room_id   Int             @id @default(autoincrement())
+  room_name String          @db.VarChar(50)
+  room_type rooms_room_type
+  schedule  schedule[]
+}
+
+model schedule {
+  id          Int                  @id @default(autoincrement())
+  subject_id  Int
+  teacher_id  Int
+  section_id  Int
+  room_id     Int
+  day_of_week schedule_day_of_week
+  start_time  DateTime             @db.Time(0)
+  end_time    DateTime             @db.Time(0)
+  sem         String               @db.VarChar(20)
+  sy          String               @db.VarChar(20)
+  unit        schedule_unit
+  program     String               @db.VarChar(50)
+  subjects    subjects             @relation(fields: [subject_id], references: [subject_id], onUpdate: Restrict, map: "schedule_ibfk_1")
+  teachers    teachers             @relation(fields: [teacher_id], references: [teacher_id], onUpdate: Restrict, map: "schedule_ibfk_2")
+  sections    sections             @relation(fields: [section_id], references: [section_id], onUpdate: Restrict, map: "schedule_ibfk_3")
+  rooms       rooms                @relation(fields: [room_id], references: [room_id], onUpdate: Restrict, map: "schedule_ibfk_4")
+
+  @@index([room_id], map: "room_id")
+  @@index([section_id], map: "section_id")
+  @@index([subject_id], map: "subject_id")
+  @@index([teacher_id], map: "teacher_id")
+}
+
+model sections {
+  section_id   Int        @id @default(autoincrement())
+  section_name String     @db.VarChar(50)
+  program      String     @db.VarChar(50)
+  schedule     schedule[]
+}
+
+model subjects {
+  subject_id   Int        @id @default(autoincrement())
+  subject_code String     @unique(map: "subject_code") @db.VarChar(20)
+  subject_name String     @db.VarChar(100)
+  schedule     schedule[]
+}
+
+model teachers {
+  teacher_id     Int                     @id @default(autoincrement())
+  fname          String                  @db.VarChar(50)
+  mname          String?                 @db.VarChar(50)
+  lname          String                  @db.VarChar(50)
+  suffix         String?                 @db.VarChar(10)
+  faculty_status teachers_faculty_status
+  schedule       schedule[]
+}
+
+enum rooms_room_type {
+  Lecture
+  Laboratory
+}
+
+enum schedule_day_of_week {
+  Mon
+  Tue
+  Wed
+  Thu
+  Fri
+  Sat
+}
+
+enum teachers_faculty_status {
+  Full_time @map("Full-time")
+  Part_time @map("Part-time")
+}
+
+enum schedule_unit {
+  lec
+  lab
+}
