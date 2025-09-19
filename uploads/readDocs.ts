@@ -48,41 +48,91 @@ export async function parseDocx(file: File): Promise<DocuInfo[]> {
             ? table["w:tr"]
             : [table["w:tr"]];
 
-        for (let i = 2; i < rows.length; i++) { // ✅ start at 1, skip header row
+        for (let i = 2; i < rows.length; i++) {
             const row = rows[i];
-            const cells: TableCell[] = Array.isArray(row["w:tc"])
-            ? row["w:tc"]
-            : [row["w:tc"]];
+            const cells: TableCell[] = Array.isArray(row["w:tc"]) ? row["w:tc"] : [row["w:tc"]];
 
-            const cellTexts = cells.map((tc) => {
-            if (!tc["w:p"]) return "";
-            const paras: Paragraph[] = Array.isArray(tc["w:p"]) ? tc["w:p"] : [tc["w:p"]];
-            return paras
-                .map((p) => {
-                if (!p["w:r"]) return "";
-                const runs = Array.isArray(p["w:r"]) ? p["w:r"] : [p["w:r"]];
-                return runs.map((r) => r["w:t"] || "").join(" ");
-                })
-                .join(" ");
+            // Extract lec and lab separately using the simple version
+            const lecCell = cells[3];
+            const labCell = cells[4];
+
+            const lec = lecCell && lecCell["w:p"]
+                ? (Array.isArray(lecCell["w:p"]) ? lecCell["w:p"] : [lecCell["w:p"]])
+                    .map(p => {
+                        if (!p["w:r"]) return "";
+                        const runs = Array.isArray(p["w:r"]) ? p["w:r"] : [p["w:r"]];
+                        return runs.map(r => r["w:t"] || "").join("");
+                    })
+                    .join(" ")
+                : "";
+
+            const lab = labCell && labCell["w:p"]
+                ? (Array.isArray(labCell["w:p"]) ? labCell["w:p"] : [labCell["w:p"]])
+                    .map(p => {
+                        if (!p["w:r"]) return "";
+                        const runs = Array.isArray(p["w:r"]) ? p["w:r"] : [p["w:r"]];
+                        return runs.map(r => r["w:t"] || "").join("");
+                    })
+                    .join(" ")
+                : "";
+
+            // Extract other cells using normalizeText
+            const cellTexts = cells.map((tc, idx) => {
+                // Skip lec and lab, since its already handled 
+                if (idx === 3 || idx === 4) return "";
+                if (!tc["w:p"]) return "";
+                const paras: Paragraph[] = Array.isArray(tc["w:p"]) ? tc["w:p"] : [tc["w:p"]];
+                return paras
+                    .map((p) => {
+                        if (!p["w:r"]) return "";
+                        const runs = Array.isArray(p["w:r"]) ? p["w:r"] : [p["w:r"]];
+                        return runs.map((r) => normalizeText(r["w:t"])).join(" ");
+                    })
+                    .join(" ")
+                    .trim();
             });
 
-            if (cellTexts.length >= 7) {
-            result.push({
-                courseNumber: cellTexts[0] || "",
-                section: cellTexts[1] || "",
-                courseDescription: cellTexts[2] || "",
-                lec: cellTexts[3] || "",
-                lab: cellTexts[4] || "",
-                noOfStudents: cellTexts[9] || "",
-                faculty: cellTexts[10] || "",
-            });
+            if (cellTexts.length >= 11) {
+                result.push({
+                    courseNumber: cellTexts[0] || "",
+                    section: cellTexts[1] || "",
+                    courseDescription: cellTexts[2] || "",
+                    lec: lec,
+                    lab: lab,
+                    noOfStudents: cellTexts[9] || "0",
+                    faculty: cellTexts[10] || "",
+                });
 
-            // Debugging logs
-            console.log("Row:", cellTexts);
+                console.log("Lec:", lec);
+                console.log("Lab:", lab);
+                console.log("Row:", cellTexts);
             }
         }
+
+
     }
 
 
     return result;
+}
+
+function normalizeText(textNode: unknown): string {
+    if (!textNode) return "";
+
+    if (typeof textNode === "string") return textNode;
+
+    if (Array.isArray(textNode)) {
+        return textNode.map(normalizeText).join("");
+    }
+
+    if (typeof textNode === "object" && textNode !== null) {
+        const obj = textNode as Record<string, unknown>;
+        if ("#text" in obj && typeof obj["#text"] === "string") {
+        return obj["#text"];
+        }
+        // Flatten any other nested values
+        return Object.values(obj).map(normalizeText).join("");
+    }
+
+    return "";
 }

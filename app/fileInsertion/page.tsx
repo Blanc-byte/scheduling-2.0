@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { parseDocx} from "@/uploads/readDocs";
 import { DocuInfo } from '@/models/documentInfo';
 import ShowDucomentInformation  from "@/components/showDocumentInfo";
+import "@/css/animation.css";
 
 export default function FileInsertion(){
     const [fileName, setFileName] = useState<string | null>(null);
@@ -20,10 +21,15 @@ export default function FileInsertion(){
         }
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             setFileName(e.dataTransfer.files[0].name);
+            const file = e.dataTransfer.files[0];
+
+            const docData = await parseDocx(file);
+            setData(docData);
+            setOpen(true);
         }
     };
     return (
