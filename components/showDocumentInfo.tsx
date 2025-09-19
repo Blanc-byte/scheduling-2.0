@@ -46,7 +46,7 @@ export default function ShowDucomentInformation( {isOpen, onClose, data}: Docume
                 <div className="mt-6 flex justify-end">
                 <button
                     onClick={onClose}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transform transition-all duration-300 ease-out animate-fadeIn"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transform transition-all duration-300 ease-out animate-fadeOut"
                 >
                     Close
                 </button>

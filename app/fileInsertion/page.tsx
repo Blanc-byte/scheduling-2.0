@@ -31,7 +31,8 @@ export default function FileInsertion(){
             <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            className="max-w-md mx-auto p-6 border-2 border-dashed border-gray-400 rounded-xl text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+            className="animate-slow-pulse max-w-md mx-auto p-6 border-2 border-dashed border-gray-400 rounded-xl text-center 
+                        cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow"
             >
                 <input
                     type="file"
@@ -43,7 +44,7 @@ export default function FileInsertion(){
                     <span className="font-medium text-blue-600">Click to upload</span> or drag & drop
                 </label>
                 {fileName && (
-                    <div>
+                    <div className='animate-fadeIn'>
                         <p className="mt-3 text-sm text-green-600">Selected: {fileName}</p>
                         <button
                             className='mt-2 bg-green-300 p-2 rounded-2xl w-20 cursor-pointer hover:bg-green-500 transition italic times'
