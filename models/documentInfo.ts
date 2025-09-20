@@ -7,3 +7,18 @@ export interface DocuInfo{
     noOfStudents: string;
     faculty:string;
 }
+
+
+export function setDocxData(data: DocuInfo[]) {
+    localStorage.removeItem("docxData");
+    localStorage.setItem("docxData", JSON.stringify(data));
+}
+
+export function getDocxData(): DocuInfo[] {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("docxData");
+    return stored ? JSON.parse(stored) : [];
+  }
+  return [];
+}
+

@@ -4,6 +4,7 @@ import { parseDocx} from "@/uploads/readDocs";
 import { DocuInfo } from '@/models/documentInfo';
 import ShowDucomentInformation  from "@/components/showDocumentInfo";
 import "@/css/animation.css";
+import { setDocxData, getDocxData } from '@/models/documentInfo';
 
 export default function FileInsertion(){
     const [fileName, setFileName] = useState<string | null>(null);
@@ -17,6 +18,8 @@ export default function FileInsertion(){
 
             const docData = await parseDocx(file);
             setData(docData);
+            setDocxData(docData);
+            console.log("sadsad", JSON.stringify(getDocxData(), null, 2));
             setOpen(true);
         }
     };
@@ -29,6 +32,8 @@ export default function FileInsertion(){
 
             const docData = await parseDocx(file);
             setData(docData);
+            setDocxData(docData);
+            console.log("sadsad", JSON.stringify(getDocxData(), null, 2));
             setOpen(true);
         }
     };
@@ -69,6 +74,7 @@ export default function FileInsertion(){
                     data={data}
                 />
             )}
+
         </div>
     );
 }
