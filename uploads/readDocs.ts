@@ -55,6 +55,7 @@ export async function parseDocx(file: File): Promise<DocuInfo[]> {
             // Extract lec and lab separately using the simple version
             const lecCell = cells[3];
             const labCell = cells[4];
+            const noOfStudentCell = cells[9];
 
             const lec = lecCell && lecCell["w:p"]
                 ? (Array.isArray(lecCell["w:p"]) ? lecCell["w:p"] : [lecCell["w:p"]])
@@ -64,7 +65,7 @@ export async function parseDocx(file: File): Promise<DocuInfo[]> {
                         return runs.map(r => r["w:t"] || "").join("");
                     })
                     .join(" ")
-                : "";
+                : "0";
 
             const lab = labCell && labCell["w:p"]
                 ? (Array.isArray(labCell["w:p"]) ? labCell["w:p"] : [labCell["w:p"]])
@@ -74,7 +75,17 @@ export async function parseDocx(file: File): Promise<DocuInfo[]> {
                         return runs.map(r => r["w:t"] || "").join("");
                     })
                     .join(" ")
-                : "";
+                : "0";
+            
+            const noOfStudents = noOfStudentCell && noOfStudentCell["w:p"]
+                ? (Array.isArray(noOfStudentCell["w:p"]) ? noOfStudentCell["w:p"] : [noOfStudentCell["w:p"]])
+                    .map(p => {
+                        if (!p["w:r"]) return "";
+                        const runs = Array.isArray(p["w:r"]) ? p["w:r"] : [p["w:r"]];
+                        return runs.map(r => r["w:t"] || "").join("");
+                    })
+                    .join(" ")
+                : "0";
 
             // Extract other cells using normalizeText
             const cellTexts = cells.map((tc, idx) => {
@@ -97,9 +108,9 @@ export async function parseDocx(file: File): Promise<DocuInfo[]> {
                     courseNumber: cellTexts[0] || "",
                     section: cellTexts[1] || "",
                     courseDescription: cellTexts[2] || "",
-                    lec: lec,
-                    lab: lab,
-                    noOfStudents: cellTexts[9] || "0",
+                    lec: lec || "0",
+                    lab: lab || "0",
+                    noOfStudents: noOfStudents || "0",
                     faculty: cellTexts[10] || "",
                 });
 
