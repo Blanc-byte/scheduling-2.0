@@ -4,8 +4,9 @@ import { parseDocx} from "@/uploads/readDocs";
 import { DocuInfo } from '@/models/documentInfo';
 import ShowDucomentInformation  from "@/components/showDocumentInfo";
 import "@/css/animation.css";
-import { setDocxData, getDocxData } from '@/models/documentInfo';
+import { setDocxData } from '@/models/documentInfo';
 import Alert from '@/components/alert';
+import LoadingScreen from '@/components/loadingScreen';
 
 export default function FileInsertion(){
     const [fileName, setFileName] = useState<string | null>(null);
@@ -13,6 +14,9 @@ export default function FileInsertion(){
     const [open, setOpen] = useState<boolean>(false);
     const [openAlert, setOpenAlert] = useState<boolean>(false);
     const [openAlertIfWrongDocx, setOpenAlertIfWrongDocx] = useState<boolean>(false);
+    const [openAlertIfNoData, setOpenAlertIfNoData] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [hover, setHover] = useState<boolean>(false);
     
 
     const fileValidation = () => {
@@ -32,12 +36,27 @@ export default function FileInsertion(){
                 return;
             }
 
-            setFileName(e.target.files[0].name);
-            const docData = await parseDocx(file);
-            setData(docData);
-            setDocxData(docData);
-            console.log("sadsad", JSON.stringify(getDocxData(), null, 2));
-            setOpen(true);
+            setLoading(true);
+
+            try{
+                const docData = await parseDocx(file);
+
+                if(docData.length===0){
+                    setOpenAlertIfNoData(true);
+                    return;
+                }
+
+                setFileName(e.target.files[0].name);
+
+                setData(docData);
+                setDocxData(docData);
+                setOpen(true);
+
+            }catch(error){
+                console.error("Error parsing docx ", error);
+            }finally{   
+                setLoading(false);
+            }
         }
     };
 
@@ -51,22 +70,37 @@ export default function FileInsertion(){
                 return;
             }
 
-            setFileName(e.dataTransfer.files[0].name);
+            setLoading(true);
+            try{
+                const docData = await parseDocx(file);
 
-            const docData = await parseDocx(file);
-            setData(docData);
-            setDocxData(docData);
-            console.log("sadsad", JSON.stringify(getDocxData(), null, 2));
-            setOpen(true);
+                if(docData.length===0){
+                    setOpenAlertIfNoData(true);
+                    return;
+                }
+
+                setFileName(file.name);
+
+                setData(docData);
+                setDocxData(docData);
+                setOpen(true);
+            }catch(error){
+                console.error("Error parsing docx ", error);
+            }finally{   
+                setLoading(false);
+            }
         }
     };
     return (
         <div className="max-w-full h-187 flex flex-col items-center justify-center">
             <div
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            className="animate-slow-pulse max-w-md mx-auto p-6 border-2 border-dashed border-gray-400 rounded-xl text-center 
-                        cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow"
+                onMouseEnter={()=>setHover(true)}
+                onMouseLeave={()=>setHover(false)}
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className={`animate-slow-pulse w-150 mx-auto p-6 border-2 border-dashed border-gray-400 rounded-xl text-center 
+                            cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all shadow
+                            ${hover? "scale-110":"scale-100"}`}
             >
                 <input
                     type="file"
@@ -81,7 +115,8 @@ export default function FileInsertion(){
                     <div className='animate-fadeIn'>
                         <p className="mt-3 text-sm text-green-600">Selected: {fileName}</p>
                         <button
-                            className='mt-2 bg-green-300 p-2 rounded-2xl w-20 cursor-pointer hover:bg-green-500 transition italic times'
+                            className='mt-2 bg-green-300 p-2 rounded-2xl w-20 cursor-pointer hover:bg-green-500 
+                                        transition italic times'
                             onClick={()=> setOpen(true)}
                         >
                             VIEW
@@ -92,7 +127,12 @@ export default function FileInsertion(){
 
             
             <button
-                className='mt-7 bg-blue-200 p-2 rounded-xs w-110 cursor-pointer hover:bg-blue-300 transition italic times'
+                onMouseEnter={()=>setHover(true)}
+                onMouseLeave={()=>setHover(false)}
+                className={`
+                    mt-7 bg-blue-200 p-2 rounded-xs w-150 cursor-pointer hover:bg-blue-300 transition-all duration-100 italic times
+                    ${hover? "scale-105": "scale-100"}
+                    `}
                 onClick={fileValidation}
             >
                 Validate
@@ -120,6 +160,17 @@ export default function FileInsertion(){
                     isOpen = {openAlertIfWrongDocx}
                     onClose={ ()=> setOpenAlertIfWrongDocx(false)}
                 />
+            }
+
+            {openAlertIfNoData && 
+                <Alert 
+                    message="No Data Read, Check The File" 
+                    isOpen = {openAlertIfNoData}
+                    onClose={ ()=> setOpenAlertIfNoData(false)}
+                />
+            }
+            {loading && 
+                <LoadingScreen />
             }
 
         </div>  
